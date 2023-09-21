@@ -12,7 +12,7 @@ class ScopeInlineFormset(BaseInlineFormSet):
         for form in self.forms:
             # В form.cleaned_data будет словарь с данными
             # каждой отдельной формы, которые вы можете проверить
-            i += int(form.cleaned_data['is_main'])
+            i += int(form.cleaned_data.get('is_main',False))
             if i > 1:
                 raise ValidationError('Может быть только одна основная категория!')
 
