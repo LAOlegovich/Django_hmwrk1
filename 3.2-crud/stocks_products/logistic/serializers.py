@@ -1,32 +1,52 @@
 from rest_framework import serializers
+from .models import Product,StockProduct,Stock
+from django.db import IntegrityError
+from rest_framework.exceptions import APIException, ValidationError
+from rest_framework import status
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    # настройте сериализатор для продукта
-    pass
+    class Meta:
+        model = Product
+        fields = ['title','description']
 
 
 class ProductPositionSerializer(serializers.ModelSerializer):
-    # настройте сериализатор для позиции продукта на складе
-    pass
+    class Meta:
+        model = StockProduct
+        fields = ['product','quantity','price']
 
 
 class StockSerializer(serializers.ModelSerializer):
     positions = ProductPositionSerializer(many=True)
 
-    # настройте сериализатор для склада
+    class Meta:
+        model = Stock
+        fields = ['address','positions']
 
     def create(self, validated_data):
         # достаем связанные данные для других таблиц
         positions = validated_data.pop('positions')
 
+        # addr = validated_data.pop('address')
+        # if Stock.objects.filter(address = addr).exists():
+        #     return Stock.objects.filter(address = addr)
+        # else:
+            
+       
         # создаем склад по его параметрам
-        stock = super().create(validated_data)
+        #stock = super().create(validated_data)
 
-        # здесь вам надо заполнить связанные таблицы
-        # в нашем случае: таблицу StockProduct
-        # с помощью списка positions
-
+        stock = Stock.objects.create(validated_data)
+                                             
+        for position in positions:
+            product = position['product']
+            quantity = position['quantity']
+            price = position['price']
+            StockProduct.objects.create(product = product,  stock = stock,
+                                            quantity = quantity, 
+                                            price = price)
+                                                                                                                       
         return stock
 
     def update(self, instance, validated_data):
@@ -36,8 +56,21 @@ class StockSerializer(serializers.ModelSerializer):
         # обновляем склад по его параметрам
         stock = super().update(instance, validated_data)
 
-        # здесь вам надо обновить связанные таблицы
-        # в нашем случае: таблицу StockProduct
-        # с помощью списка positions
+        for position in positions:
+            product = position['product']
+            quantity = position['quantity']
+            price = position['price']
+            stock_product = StockProduct.objects.filter(stock = stock, product = product)
 
+            if stock_product.exists():
+                dictionary = dict(quantity = stock_product.get().quantity + quantity,
+                                 price = price)
+            else:
+                dictionary = dict(quantity = quantity, price = price)
+
+            StockProduct.objects.update_or_create(stock = stock, product = product,
+                                                  defaults = dictionary)
+                
+
+       
         return stock
