@@ -97,7 +97,6 @@ def test_create_course(client):
     assert Course.objects.filter(name = 'mathematics').count() == 1
 
 
-
 @pytest.mark.django_db
 def test_update_course(client,courses):
 
@@ -105,18 +104,19 @@ def test_update_course(client,courses):
 
     data_ = {'name':'geometry'}
 
-    responce = client.patch(f'/api/v1/courses/?id={cours[0].id}', data = data_ , format = 'json')
+    responce = client.patch(f'/api/v1/courses/{cours[0].id}/', data = data_ , format = 'json')
 
-    assert responce.status_code == 201
+    assert responce.status_code == 200
 
     assert Course.objects.filter(name = 'geometry').count() == 1
+
 
 @pytest.mark.django_db
 def test_delete_course(client,courses):
     
     cours = courses(_quantity = 1)
 
-    responce = client.delete(f'/api/v1/courses/?id={cours[0].id}', format = 'json')
+    responce = client.delete(f'/api/v1/courses/{cours[0].id}/', format = 'json')
 
     assert responce.status_code == 204
 
