@@ -108,6 +108,8 @@ def test_update_course(client,courses):
 
     assert responce.status_code == 200
 
+    assert Course.objects.count() == 1
+
     assert Course.objects.filter(name = 'geometry').count() == 1
 
 
