@@ -5,6 +5,8 @@ from model_bakery import baker
 
 from students.models import Course, Student
 
+from random import randrange
+
 @pytest.fixture
 def client():
     return APIClient()
@@ -24,21 +26,20 @@ def student():
 
 @pytest.mark.django_db
 def test_retrieve_course(client, courses):
+    quantity = 5
+    cours = courses(_quantity = quantity)
 
-    cours = courses(_quantity = 3)
+    r = randrange(0, quantity-1, 1)
 
-    responce = client.get('/api/v1/courses/', format = 'json')
+    value = cours[r].id
+
+    responce = client.get(f'/api/v1/courses/{value}/', format = 'json')
 
     assert responce.status_code == 200
 
     data = responce.json()
 
-    assert len(cours) == len(data) 
-
-    assert data[0]['name'] == cours[0].name
-
-    assert data[0]['name'] != cours[1].name
-
+    assert data['name'] == cours[r].name
 
 
 @pytest.mark.django_db
